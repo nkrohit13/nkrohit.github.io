@@ -1,3 +1,4 @@
+---
 import Gallery from '../../../../components/Gallery.astro';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 
@@ -17,17 +18,7 @@ const dailyUIChallenges = [
     }
     // Add more images as needed
 ];
----
 
 <BaseLayout title="Daily UI Challenges - Hype4Academy" description="Daily UI Design Challenges">
-    <div class="container mx-auto px-4 py-12">
-        <h1 class="text-4xl font-bold mb-8">Daily UI Design Challenges</h1>
-
-        <!-- Gallery Component -->
-        <Gallery images={dailyUIChallenges} />
-
-        <div class="mt-12 text-center">
-            <p class="text-lg text-gray-600">Check back daily for new design challenges and inspiration!</p>
-        </div>
-    </div>
+  ...
 </BaseLayout>
