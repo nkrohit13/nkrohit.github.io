@@ -1,0 +1,47 @@
+---
+/* No props required */
+---
+
+<a href="https://x.com/juxtopposed" target="_blank" class="group relative flex h-[50px] w-[160px] cursor-pointer items-center justify-center font-inter">
+    <button
+        class="relative z-10 h-full w-full transform rounded-[13px] border-none bg-secondary-light text-secondaryFg-light text-base font-medium transition-all duration-200 group-hover:translate-y-1 dark:bg-secondary-dark dark:text-secondaryFg-dark"
+        style="clip-path: path('M 0 25 C 0 -5, -5 0, 80 0 S 160 -5, 160 25, 165 50 80 50, 0 55, 0 25');"
+    >
+        Connect
+    </button>
+    <span
+        class="absolute bottom-[-50%] z-0 h-[60px] w-[100px] rounded-full blur-[20px] opacity-20 transition-opacity duration-200 group-hover:opacity-100 bg-secondaryHi-light dark:bg-secondaryHi-dark"
+    ></span>
+</a>
+
+<style>
+    :root {
+        --secondary-light: hsl(156, 51%, 90%);
+        --secondaryFg-light: hsl(156, 51%, 20%);
+        --secondaryHi-light: hsla(156, 51%, 50%, 0.4);
+
+        --secondary-dark: hsl(156, 51%, 14%);
+        --secondaryFg-dark: hsl(156, 51%, 75%);
+        --secondaryHi-dark: hsla(156, 51%, 30%, 0.5);
+    }
+
+    .bg-secondary-light {
+        background-color: var(--secondary-light);
+    }
+    .text-secondaryFg-light {
+        color: var(--secondaryFg-light);
+    }
+    .bg-secondaryHi-light {
+        background-color: var(--secondaryHi-light);
+    }
+
+    .bg-secondary-dark {
+        background-color: var(--secondary-dark);
+    }
+    .text-secondaryFg-dark {
+        color: var(--secondaryFg-dark);
+    }
+    .bg-secondaryHi-dark {
+        background-color: var(--secondaryHi-dark);
+    }
+</style>

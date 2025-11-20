@@ -1,11 +1,13 @@
 ---
 import siteConfig from '../data/site-config';
+import Contact from './Contact.astro';
 
 const socialLinks = siteConfig.socialLinks || [];
 const navLinks = siteConfig.footerNavLinks || [];
 ---
 
 <footer class="w-full max-w-3xl mx-auto pt-12 pb-10 sm:pt-24 sm:pb-14">
+    <Contact class="mb-12" />
     {
         navLinks.length > 0 && (
             <div class="mb-4 flex flex-wrap gap-x-6 gap-y-1">

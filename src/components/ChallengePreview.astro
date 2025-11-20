@@ -1,0 +1,63 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+type Props = {
+    challenge: CollectionEntry<'challenges'>;
+    class?: string;
+    headingLevel?: 'h2' | 'h3';
+};
+
+const { challenge, class: className, headingLevel = 'h2' } = Astro.props as Props;
+const { title, description, publishDate, updatedDate } = challenge.data;
+const Heading = headingLevel;
+
+// Helper to get the category from the id (which contains the slug)
+const getCategoryFromId = (id: string) => {
+    const parts = id.split('/');
+    return parts.length > 1 ? parts[1] : 'challenge';
+};
+
+// Get the slug from the id (remove the collection prefix)
+const getSlug = (id: string) => id.replace(/^challenges\//, '');
+---
+
+<article class:list={['group relative', className]}>
+    <a class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-8" href={`/challenges/${getSlug(challenge.id)}/`}>
+        <div class="flex-1">
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+                <time datetime={publishDate.toISOString()}>
+                    {
+                        new Date(publishDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        })
+                    }
+                </time>
+                {
+                    updatedDate && (
+                        <span class="text-xs text-gray-400">
+                            (Updated:{' '}
+                            {new Date(updatedDate).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            })}
+                            )
+                        </span>
+                    )
+                }
+            </div>
+            <Heading class="mt-1 text-xl font-medium text-gray-900 group-hover:text-gray-600 sm:text-2xl">
+                {title}
+            </Heading>
+            {description && <p class="mt-2 text-gray-600">{description}</p>}
+        </div>
+        <div class="mt-2 flex items-center gap-2 sm:mt-0">
+            <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800">
+                {getCategoryFromId(challenge.id)}
+            </span>
+            <span class="text-gray-400 transition-transform group-hover:translate-x-1"> → </span>
+        </div>
+    </a>
+</article>

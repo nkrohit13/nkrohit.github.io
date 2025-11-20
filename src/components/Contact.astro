@@ -1,0 +1,53 @@
+---
+import siteConfig from '../data/site-config';
+
+const contact = siteConfig.contact;
+
+const { 
+    class: className,
+    title: customTitle,
+    subtitle: customSubtitle 
+} = Astro.props;
+
+// Use custom title/subtitle if provided, otherwise fall back to site config
+const title = customTitle || contact?.title;
+const subtitle = customSubtitle || contact?.text;
+---
+
+{
+    contact && (
+        <section class:list={['flex flex-col items-start', className]}>
+            {title && (
+                <h2 class="text-3xl font-bold mb-6">
+                    {title}
+                </h2>
+            )}
+            {subtitle && <p class="w-full max-w-xl mb-8 text-base leading-normal text-left">{subtitle}</p>}
+
+            <div class="w-full max-w-xl mb-8 text-sm">
+                {contact.email && (
+                    <div class="flex flex-col items-center">
+                        <div class="w-12 h-12 mb-3 rounded-full bg-main/10 flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                />
+                            </svg>
+                        </div>
+                        <span class="font-medium">Email</span>
+                        <a href={`mailto:${contact.email}`} class="text-main/80 hover:text-main transition-colors">
+                            {contact.email}
+                        </a>
+                    </div>
+                )}
+
+
+            </div>
+
+            <!-- Removed Send Message Button Section -->
+        </section>
+    )
+}

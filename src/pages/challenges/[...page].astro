@@ -1,0 +1,75 @@
+---
+// Import types and utilities
+import type { GetStaticPaths } from 'astro';
+import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
+
+// Import components
+import Pagination from '../../components/Pagination.astro';
+import ChallengePreview from '../../components/ChallengePreview.astro';
+import siteConfig from '../../data/site-config';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { sortItemsByDateDesc } from '../../utils/data-utils';
+
+// Get all challenges for static paths
+export const getStaticPaths = (async ({ paginate }) => {
+    const challenges = (await getCollection('challenges')).sort(sortItemsByDateDesc);
+    return paginate(challenges, { 
+        pageSize: siteConfig.challengesPerPage || 6 
+    });
+}) satisfies GetStaticPaths;
+
+// Define props type for the component
+type Props = { 
+    page: {
+        data: CollectionEntry<'challenges'>[];
+        url: { pathname: string };
+        currentPage: number;
+        lastPage: number;
+        totalPages: number;
+    };
+};
+
+// Get props and data
+const { page } = Astro.props;
+const challenges = page.data;
+
+// Define challenge categories
+const challengeCategories = [
+    { id: 'all', name: 'All Challenges' },
+    { id: 'daily-graphic', name: 'Daily Graphics' },
+    { id: 'daily-ui', name: 'Daily UI' },
+    { id: 'uxhack-weekend', name: 'UX Hack Weekend' },
+];
+---
+
+<BaseLayout
+    title="Challenges"
+    description="Explore a collection of design and development challenges"
+    image={{ src: '/dante-preview.jpg', alt: 'The preview of the site' }}
+    showHeader={false}
+>
+<h1 class="mb-8 text-2xl leading-tight font-serif italic sm:mb-12 sm:text-4xl">Challenges</h1>
+
+<!-- Segmented Buttons -->
+<div class="mb-8 flex flex-wrap gap-2 sm:gap-4">
+    {
+        challengeCategories.map((category) => (
+            <button
+                class="px-4 py-2 text-sm font-medium rounded-full transition-colors
+                       bg-gray-100 text-gray-700 hover:bg-gray-200
+                       data-[active=true]:bg-gray-800 data-[active=true]:text-white"
+                data-active={category.id === 'all'}
+                data-category={category.id}
+            >
+                {category.name}
+            </button>
+        ))
+    }
+</div>
+
+<div class="grid gap-10 sm:gap-12">
+    {challenges.map((challenge) => <ChallengePreview challenge={challenge} />)}
+</div>
+
+<Pagination page={page} class="my-16 sm:my-24" />

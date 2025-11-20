@@ -1,24 +1,112 @@
 ---
-import { type CollectionEntry } from 'astro:content';
-import ArrowRight from '../icons/ArrowRight.astro';
+import type { CollectionEntry } from 'astro:content';
 
-type Props = { project: CollectionEntry<'projects'>; class?: string; headingLevel?: 'h2' | 'h3' };
+// Props
+export interface Props {
+    project: CollectionEntry<'projects'>;
+    showThumbnail?: boolean;
+    className?: string;
+    layout?: 'grid' | 'list';
+    headingLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+}
 
-const { project, class: className, headingLevel = 'h2' } = Astro.props;
-const { title, description } = project.data;
-const TitleTag = headingLevel;
+const {
+    project,
+    showThumbnail = false,
+    className = '',
+    layout = 'grid', // Default to grid layout
+    headingLevel = 'h2' // Default to h2
+} = Astro.props;
+
+// Extract project data
+const { title, tags = [], publishDate, description } = project.data;
+
+// Get the image from SEO data or first image in content
+const imageUrl = project.data.seo?.image?.src || project.body?.match(/!\[.*?\]\((.*?)\)/)?.[1] || '';
+
+// Format date as Month YYYY (e.g., August 2023)
+const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+};
+
+// This will be used by the client-side script
+const projectId = `project-${Math.random().toString(36).substr(2, 9)}`;
 ---
 
-<a class:list={['flex justify-between items-start gap-8 group', className]} href={`/projects/${project.id}/`}>
-    <div class="grow">
-        <TitleTag
-            class="text-xl leading-tight font-serif font-medium group-hover:underline group-hover:decoration-dashed group-hover:underline-offset-4 group-hover:decoration-1 sm:text-2xl"
-        >
-            {title}
-        </TitleTag>
-        {description && <div class="mt-1 text-sm leading-normal">{description}</div>}
-    </div>
-    <div class="hidden font-serif italic opacity-0 transition group-hover:opacity-100 sm:inline-flex sm:gap-1 sm:items-center sm:shrink-0">
-        View Project <ArrowRight class="fill-current w-4 h-4" />
-    </div>
-</a>
+<script>
+    // Handle layout changes on the client side
+    document.addEventListener('astro:page-load', () => {
+        const projectElement = document.getElementById('${projectId}');
+        if (!projectElement) return;
+
+        // Function to update layout
+        const updateLayout = (layout: 'grid' | 'list') => {
+            if (layout === 'grid') {
+                projectElement.classList.add('grid-item');
+                projectElement.classList.remove('list-item');
+            } else {
+                projectElement.classList.add('list-item');
+                projectElement.classList.remove('grid-item');
+            }
+        };
+
+        // Initial setup
+        const container = document.getElementById('projects-container');
+        if (container) {
+            const isGrid = container.classList.contains('grid');
+            updateLayout(isGrid ? 'grid' : 'list');
+
+            // Listen for layout changes
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const isGrid = (mutation.target as HTMLElement).classList.contains('grid');
+                        updateLayout(isGrid ? 'grid' : 'list');
+                    }
+                });
+            });
+
+            observer.observe(container, { attributes: true });
+        }
+    });
+</script>
+
+<div id={projectId} class:list={['project-preview', layout === 'grid' ? 'grid-item' : 'list-item']}>
+    <a href={`/projects/${project.id}/`} class="block">
+        {/* Thumbnail */}
+        {
+            imageUrl && showThumbnail && (
+                <div class="mb-2">
+                    <img src={imageUrl} alt={title} class="w-full h-auto" loading="lazy" />
+                </div>
+            )
+        }
+
+        {/* Project Info */}
+        <div>
+            {
+                (() => {
+                    const headingClass = 'text-lg font-medium text-gray-900';
+                    switch (headingLevel) {
+                        case 'h1':
+                            return <h1 class={headingClass}>{title}</h1>;
+                        case 'h2':
+                            return <h2 class={headingClass}>{title}</h2>;
+                        case 'h3':
+                            return <h3 class={headingClass}>{title}</h3>;
+                        case 'h4':
+                            return <h4 class={headingClass}>{title}</h4>;
+                        case 'h5':
+                            return <h5 class={headingClass}>{title}</h5>;
+                        case 'h6':
+                            return <h6 class={headingClass}>{title}</h6>;
+                        default:
+                            return <h2 class={headingClass}>{title}</h2>;
+                    }
+                })()
+            }
+            {publishDate && <p class="text-sm text-gray-500">{formatDate(publishDate.toString())}</p>}
+        </div>
+    </a>
+</div>

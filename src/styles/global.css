@@ -1,23 +1,56 @@
-@import '@fontsource-variable/inter' layer(base);
-@import '@fontsource-variable/newsreader' layer(base);
-@import '@fontsource-variable/newsreader/wght-italic.css' layer(base);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@import 'tailwindcss';
-@plugin '@tailwindcss/typography';
+@layer base {
+    :root {
+        --font-sans: 'Rethink Sans', sans-serif;
+        --font-serif: 'Rethink Sans', sans-serif;
+    }
+    
+    html {
+        font-family: var(--font-sans);
+   
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600;
+    }
 
-@custom-variant dark (&:where(.dark, .dark *));
+    /* Ensure any font-serif utility resolves to the site's sans font (Rethink Sans)
+       so headings and previews remain consistent site-wide */
+    .font-serif {
+        font-family: var(--font-serif) !important;
+    }
 
-:root {
-    --text-main: #171717;
-    --bg-main: #f2f1ec;
-    --bg-muted: #eae9e1;
-    --border-main: #171717;
-}
-html.dark {
-    --text-main: #f2f1ec;
-    --bg-main: #171717;
-    --bg-muted: #242424;
-    --border-main: #f2f1ec;
+    .dark {
+        --text-main: #f2f1ec;
+        --bg-main: #171717;
+        --bg-muted: #242424;
+        --border-main: #f2f1ec;
+        --color-primary: 229 229 229; /* gray-200 */
+        --color-secondary: 38 38 38; /* gray-900 */
+    }
+
+    /* Smooth transitions for theme changes */
+    html {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        scroll-behavior: smooth;
+        transition: background-color 200ms, color 200ms;
+    }
+
+    body {
+        min-height: 100vh;
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        transition: background-color 200ms, color 200ms;
+    }
+
+    /* Better selection color */
+    ::selection {
+        @apply bg-primary-500/20 text-primary-600 dark:text-primary-400;
+    }
 }
 
 /* Cyan */
@@ -53,8 +86,7 @@ html.dark {
 */
 
 @theme inline {
-    --font-sans: 'Inter Variable', sans-serif;
-    --font-serif: 'Newsreader Variable', serif;
+    --font-sans: 'Rethink Sans', sans-serif;
     --text-color-main: var(--text-main);
     --background-color-main: var(--bg-main);
     --background-color-muted: var(--bg-muted);
@@ -85,14 +117,65 @@ html.dark {
     }
 
     .prose :where(h1, h2, h3, h4, h5, h6) {
-        @apply font-serif font-medium;
-    }
-
-    .prose :where(code, strong) {
         @apply font-medium;
     }
 
+    .prose :where(code, strong) {
+        @apply font-medium; 
+    }
+
     .prose blockquote {
-        @apply font-serif font-normal italic border-none pl-0 text-[1.375em] leading-snug sm:text-[1.66667em];
+        @apply font-normal border-none pl-0 text-[1.375em] leading-snug sm:text-[1.66667em];
+    }
+
+    /* Large display title for project detail pages (uses Rethink Sans) */
+    .project-detail-title {
+        font-family: var(--font-sans) !important;
+        font-weight: 700;
+        font-size: clamp(1.75rem, 6vw, 3rem);
+        line-height: 1.08; /* increased for better readability */
+        text-transform: none; /* keep original casing (sentence case) */
+        letter-spacing: 0; /* neutral spacing for sentence case */
+        margin: 0 0 0.5rem 0;
+    }
+
+    /* TOC rail */
+    .toc-rail {
+        display: none;
+    }
+
+    @media (min-width: 1024px) {
+        .toc-rail {
+            display: block;
+            position: fixed;
+            left: 2rem;
+            top: 6.5rem;
+            max-width: 240px;
+            padding-right: 1rem;
+        }
+
+        /* push main content to the right slightly so rail doesn't overlap */
+        main .toc-offset {
+            margin-left: 260px;
+        }
+    }
+
+    .toc-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .toc-h2 a {
+        font-weight: 600;
+    }
+
+    .toc-h3 a {
+        padding-left: 0.5rem;
+        color: var(--text-main);
+        opacity: 0.85;
     }
 }

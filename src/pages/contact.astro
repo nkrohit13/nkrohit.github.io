@@ -1,0 +1,62 @@
+---
+import { getEntry, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactForm from '../components/Contact.astro';
+
+// Get the contact page content
+const contactEntry = await getEntry('pages', 'contact');
+const { title, seo } = contactEntry?.data || {};
+const { Content } = contactEntry ? await render(contactEntry) : { Content: null };
+---
+
+<BaseLayout title={seo?.title ?? title} description={seo?.description} showHeader={false}>
+    <div class="max-w-3xl mx-auto">
+        <h1 class="mb-12 text-3xl leading-tight font-bold sm:mb-16 sm:text-5xl">
+            {title || 'Get in Touch'}
+        </h1>
+    </div>
+
+    <!-- Contact Section with Custom Title/Subtitle -->
+    <ContactForm 
+        title="We'd Love to Hear From You"
+        subtitle="Feel free to reach out with any questions or inquiries. Our team typically responds within 24 hours."
+    />
+
+    <!-- Additional Content from contact.md -->
+    {
+        Content && (
+            <div class="mt-12 prose prose-lg max-w-none">
+                <Content />
+            </div>
+        )
+    }
+
+    <div class="mt-8 text-left">
+        <button
+            id="copyEmailBtn"
+            class="inline-flex items-center px-8 py-4 font-sans leading-tight text-main bg-main border border-main rounded-full transition hover:bg-muted cursor-pointer"
+            data-email="nkrohit13@outlook.com"
+        >
+            nkrohit13@outlook.com
+        </button>
+        <span id="copyFeedback" class="hidden ml-4 text-sm text-white/50">Copied!</span>
+    </div>
+
+    <script>
+        const copyButton = document.getElementById('copyEmailBtn');
+        const feedback = document.getElementById('copyFeedback');
+
+        if (copyButton && feedback) {
+            copyButton.addEventListener('click', async () => {
+                const email = 'nkrohit13@outlook.com';
+                try {
+                    await navigator.clipboard.writeText(email);
+                    feedback.classList.remove('hidden');
+                    setTimeout(() => feedback.classList.add('hidden'), 2000);
+                } catch (err) {
+                    console.error('Failed to copy email: ', err);
+                }
+            });
+        }
+    </script>
+</BaseLayout>

@@ -1,25 +1,52 @@
-import { type CollectionEntry } from 'astro:content';
 import { slugify } from './common-utils';
 
-export function sortItemsByDateDesc(itemA: CollectionEntry<'blog' | 'projects'>, itemB: CollectionEntry<'blog' | 'projects'>) {
+// More flexible type that works with any collection entry
+type AnyCollectionEntry = {
+    data: {
+        publishDate: Date | string | number;
+        [key: string]: any;
+    };
+    [key: string]: any;
+};
+
+export function sortItemsByDateDesc(itemA: AnyCollectionEntry, itemB: AnyCollectionEntry) {
     return new Date(itemB.data.publishDate).getTime() - new Date(itemA.data.publishDate).getTime();
 }
 
-export function getAllTags(posts: CollectionEntry<'blog'>[]) {
-    const tags: string[] = [...new Set(posts.flatMap((post) => post.data.tags || []).filter(Boolean))];
-    return tags
-        .map((tag) => {
-            return {
-                name: tag,
-                id: slugify(tag)
-            };
-        })
-        .filter((obj, pos, arr) => {
-            return arr.map((mapObj) => mapObj.id).indexOf(obj.id) === pos;
-        });
+export function getAllTags(posts: AnyCollectionEntry[]) {
+    const tags: string[] = [];
+    
+    // Safely extract tags from posts
+    for (const post of posts) {
+        if (post.data.tags && Array.isArray(post.data.tags)) {
+            for (const tag of post.data.tags) {
+                if (typeof tag === 'string') {
+                    tags.push(tag);
+                }
+            }
+        }
+    }
+    
+    // Remove duplicates and format
+    const uniqueTags = [...new Set(tags)];
+    return uniqueTags
+        .map((tag) => ({
+            name: tag,
+            id: slugify(tag)
+        }))
+        .filter((obj, pos, arr) => 
+            arr.findIndex(item => item.id === obj.id) === pos
+        );
 }
 
-export function getPostsByTag(posts: CollectionEntry<'blog'>[], tagId: string) {
-    const filteredPosts: CollectionEntry<'blog'>[] = posts.filter((post) => (post.data.tags || []).map((tag) => slugify(tag)).includes(tagId));
-    return filteredPosts;
+export function getPostsByTag(posts: AnyCollectionEntry[], tagId: string) {
+    if (!posts || !Array.isArray(posts)) return [];
+    
+    return posts.filter((post) => {
+        if (!post.data.tags || !Array.isArray(post.data.tags)) return false;
+        
+        return post.data.tags.some((tag: unknown) => 
+            typeof tag === 'string' && slugify(tag) === tagId
+        );
+    });
 }
