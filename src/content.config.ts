@@ -22,7 +22,9 @@ const blog = defineCollection({
         updatedDate: z.coerce.date().optional(),
         isFeatured: z.boolean().default(false),
         tags: z.array(z.string()).default([]),
-        seo: seoSchema.optional()
+        seo: seoSchema.optional(),
+        contactTitle: z.string().optional(),
+        contactText: z.string().optional()
     })
 });
 
@@ -57,7 +59,10 @@ const projects = defineCollection({
         updatedDate: z.coerce.date().optional(),
         isFeatured: z.boolean().default(false),
         tags: z.array(z.string()).default([]),
-        seo: seoSchema.optional()
+        seo: seoSchema.optional(),
+        darkImage: z.string().optional(),
+        contactTitle: z.string().optional(),
+        contactText: z.string().optional()
     })
 });
 

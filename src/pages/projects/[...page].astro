@@ -7,9 +7,6 @@ import siteConfig from '../../data/site-config';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { sortItemsByDateDesc } from '../../utils/data-utils';
 
-// Import the LayoutToggle component
-import LayoutToggle from '../../components/LayoutToggle.astro';
-
 export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
     const projects = (await getCollection('projects')).sort(sortItemsByDateDesc);
     return paginate(projects, { pageSize: siteConfig.projectsPerPage || 6 });
@@ -28,20 +25,15 @@ const portfolio = page.data;
     showHeader={false}
 >
     <div class="mb-12 sm:mb-16">
-        <div class="flex justify-between items-center mb-12">
-            <h1 class="text-3xl leading-tight font-bold sm:text-5xl">Projects</h1>
-            <LayoutToggle />
-        </div>
-        <div id="projects-container" class="space-y-6 max-w-4xl mx-auto">
-            {portfolio.map((project) => (
-                <div class:list={['project-item', 'w-full']}>
-                    <ProjectPreview 
-                        project={project} 
-                        showThumbnail={true}
-                        layout="grid"
-                    />
-                </div>
-            ))}
+        <h1 class="text-3xl leading-tight font-bold sm:text-5xl mb-12">Projects</h1>
+        <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {
+                portfolio.map((project) => (
+                    <div class:list={['project-item', 'w-full']}>
+                        <ProjectPreview project={project} showThumbnail={true} />
+                    </div>
+                ))
+            }
         </div>
     </div>
     <Pagination page={page} class="mt-16 sm:mt-24" />

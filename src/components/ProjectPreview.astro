@@ -6,7 +6,6 @@ export interface Props {
     project: CollectionEntry<'projects'>;
     showThumbnail?: boolean;
     className?: string;
-    layout?: 'grid' | 'list';
     headingLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 }
 
@@ -14,7 +13,6 @@ const {
     project,
     showThumbnail = false,
     className = '',
-    layout = 'grid', // Default to grid layout
     headingLevel = 'h2' // Default to h2
 } = Astro.props;
 
@@ -29,84 +27,68 @@ const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 };
-
-// This will be used by the client-side script
-const projectId = `project-${Math.random().toString(36).substr(2, 9)}`;
 ---
 
-<script>
-    // Handle layout changes on the client side
-    document.addEventListener('astro:page-load', () => {
-        const projectElement = document.getElementById('${projectId}');
-        if (!projectElement) return;
-
-        // Function to update layout
-        const updateLayout = (layout: 'grid' | 'list') => {
-            if (layout === 'grid') {
-                projectElement.classList.add('grid-item');
-                projectElement.classList.remove('list-item');
-            } else {
-                projectElement.classList.add('list-item');
-                projectElement.classList.remove('grid-item');
-            }
-        };
-
-        // Initial setup
-        const container = document.getElementById('projects-container');
-        if (container) {
-            const isGrid = container.classList.contains('grid');
-            updateLayout(isGrid ? 'grid' : 'list');
-
-            // Listen for layout changes
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                        const isGrid = (mutation.target as HTMLElement).classList.contains('grid');
-                        updateLayout(isGrid ? 'grid' : 'list');
-                    }
-                });
-            });
-
-            observer.observe(container, { attributes: true });
-        }
-    });
-</script>
-
-<div id={projectId} class:list={['project-preview', layout === 'grid' ? 'grid-item' : 'list-item']}>
-    <a href={`/projects/${project.id}/`} class="block">
-        {/* Thumbnail */}
+<div class:list={['project-preview grid-item', className]}>
+    <a href={`/projects/${project.id}/`} class="group">
+        {/* Thumbnail / Icon */}
         {
             imageUrl && showThumbnail && (
-                <div class="mb-2">
-                    <img src={imageUrl} alt={title} class="w-full h-auto" loading="lazy" />
+                <div class="image-container relative">
+                    <img src={imageUrl} alt={title} loading="lazy" class={project.data.darkImage ? 'dark:hidden' : ''} />
+                    {project.data.darkImage && (
+                        <img src={project.data.darkImage} alt={title} loading="lazy" class="hidden dark:block absolute inset-0 w-full h-full object-cover" />
+                    )}
                 </div>
             )
         }
 
         {/* Project Info */}
-        <div>
-            {
-                (() => {
-                    const headingClass = 'text-lg font-medium text-gray-900';
-                    switch (headingLevel) {
-                        case 'h1':
-                            return <h1 class={headingClass}>{title}</h1>;
-                        case 'h2':
-                            return <h2 class={headingClass}>{title}</h2>;
-                        case 'h3':
-                            return <h3 class={headingClass}>{title}</h3>;
-                        case 'h4':
-                            return <h4 class={headingClass}>{title}</h4>;
-                        case 'h5':
-                            return <h5 class={headingClass}>{title}</h5>;
-                        case 'h6':
-                            return <h6 class={headingClass}>{title}</h6>;
-                        default:
-                            return <h2 class={headingClass}>{title}</h2>;
+        <div class="content-container">
+            <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-3 flex-wrap">
+                    {
+                        (() => {
+                            const headingClass = 'text-lg font-bold text-gray-900 dark:text-white';
+                            switch (headingLevel) {
+                                case 'h1':
+                                    return <h1 class={headingClass}>{title}</h1>;
+                                case 'h2':
+                                    return <h2 class={headingClass}>{title}</h2>;
+                                case 'h3':
+                                    return <h3 class={headingClass}>{title}</h3>;
+                                case 'h4':
+                                    return <h4 class={headingClass}>{title}</h4>;
+                                case 'h5':
+                                    return <h5 class={headingClass}>{title}</h5>;
+                                case 'h6':
+                                    return <h6 class={headingClass}>{title}</h6>;
+                                default:
+                                    return <h2 class={headingClass}>{title}</h2>;
+                            }
+                        })()
                     }
-                })()
-            }
-            {publishDate && <p class="text-sm text-gray-500">{formatDate(publishDate.toString())}</p>}
+                </div>
+
+                {description && <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2">{description}</p>}
+            </div>
+
+            {publishDate && <p class="text-xs text-gray-400 mt-2">{formatDate(publishDate.toString())}</p>}
         </div>
     </a>
 </div>
+
+<style>
+    /* Grid Layout Styles */
+    .grid-item a {
+        @apply block h-full;
+    }
+
+    .grid-item .image-container {
+        @apply mb-4 aspect-video w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800;
+    }
+
+    .grid-item img {
+        @apply w-full h-full object-cover;
+    }
+</style>

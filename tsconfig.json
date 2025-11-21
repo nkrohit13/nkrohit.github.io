@@ -5,7 +5,9 @@
     "**/*",
     "node_modules/@types/**/*"
   ],
-  "exclude": ["dist"],
+  "exclude": [
+    "dist"
+  ],
   "compilerOptions": {
     "strictNullChecks": true,
     "types": [

@@ -25,8 +25,8 @@ type Props = {
 };
 
 const { project, prevProject, nextProject } = Astro.props;
-const { title, description, seo } = project.data;
-const { Content } = await render(project);
+const { title, description, seo, contactTitle, contactText } = project.data;
+const { Content, headings } = await render(project);
 
 // Prepare items to show in the "View Next" grid. If only one adjacent project
 // exists (prev or next), pick a fallback project from the collection so the
@@ -41,11 +41,32 @@ if (viewItems.length < 2) {
 }
 ---
 
-<BaseLayout title={seo?.title ?? title} description={seo?.description ?? description} image={seo?.image} pageType="article" showHeader={false}>
+<BaseLayout
+    title={seo?.title ?? title}
+    description={seo?.description ?? description}
+    image={seo?.image}
+    pageType="article"
+    showHeader={false}
+    contactTitle={contactTitle}
+    contactText={contactText}
+>
     <article class="mb-16 sm:mb-24">
-        <!-- TOC rail (client-side populated) -->
         <nav id="toc-rail" class="toc-rail" aria-label="Table of contents">
-            <ul class="toc-list"></ul>
+            {
+                headings && headings.length > 0 && (
+                    <ul class="toc-list">
+                        {headings
+                            .filter((h) => h.depth <= 3)
+                            .map((h) => (
+                                <li class={`toc-h${h.depth}`}>
+                                    <a href={`#${h.slug}`} class="text-sm text-gray-300 hover:underline">
+                                        {h.text}
+                                    </a>
+                                </li>
+                            ))}
+                    </ul>
+                )
+            }
         </nav>
         <header class="mb-12 border-b border-gray-300/10 pb-8">
             <h1 class="project-detail-title">
@@ -53,179 +74,54 @@ if (viewItems.length < 2) {
             </h1>
             <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-400">
                 <FormattedDate date={new Date(project.data.publishDate)} />
-                {
-                    Array.isArray(project.data.tags) && project.data.tags.length > 0 && (
-                        <div class="flex flex-wrap items-center gap-2">
-                            {project.data.tags.map((t) => (
-                                <span class="px-2 py-1 border border-gray-600 rounded text-xs uppercase">{t}</span>
-                            ))}
-                        </div>
-                    )
-                }
             </div>
         </header>
         <div class="max-w-none prose sm:prose-lg">
             <Content />
         </div>
-    </article>
-    <!-- Client script: build TOC from headings inside .prose -->
-    <script is:inline>
-        (function () {
-            function slugify(text) {
-                return text
-                    .toString()
-                    .toLowerCase()
-                    .replace(/[^a-z0-9\s-]/g, '')
-                    .trim()
-                    .replace(/\s+/g, '-');
-            }
-
-            // run after DOM is ready
-            function buildTOC() {
-                const content = document.querySelector('.prose');
-                const toc = document.getElementById('toc-rail');
-                if (!content || !toc) return;
-                const list = toc.querySelector('.toc-list');
-                list.innerHTML = '';
-                const headings = content.querySelectorAll('h2, h3');
-                headings.forEach((h) => {
-                    const text = h.textContent.trim();
-                    const id = h.id || slugify(text);
-                    h.id = id;
-                    const li = document.createElement('li');
-                    li.className = h.tagName === 'H2' ? 'toc-h2' : 'toc-h3';
-                    const a = document.createElement('a');
-                    a.href = '#' + id;
-                    a.textContent = text;
-                    a.className = 'text-sm text-gray-300 hover:underline';
-                    li.appendChild(a);
-                    list.appendChild(li);
-                });
-
-                // Position the TOC so its first item aligns with the bottom divider of the header
-                const header = document.querySelector('article header');
-                if (header && window.innerWidth >= 1024) {
-                    const headerRect = header.getBoundingClientRect();
-                    // headerRect.bottom is relative to viewport; compute offset from document top
-                    const topOffset = window.scrollY + headerRect.bottom;
-                    // small offset so the list sits a bit below the divider
-                    toc.style.top = topOffset + 8 + 'px';
-                } else {
-                    toc.style.top = '';
-                }
-            }
-
-            // Recompute TOC position on resize and load
-            function recompute() {
-                buildTOC();
-            }
-
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', recompute);
-            } else {
-                recompute();
-            }
-            window.addEventListener('resize', recompute);
-
-            // Smooth-scroll TOC links to prevent instant jumping (custom human-like animation)
-            const TOC_SNAP_TOP = 80; // px
-            let tocScrollAnim = null;
-            function easeInOutCubic(t) {
-                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-            }
-            function smoothScrollToY(targetY, duration = 600, callback) {
-                if (tocScrollAnim) cancelAnimationFrame(tocScrollAnim);
-                const startY = window.scrollY;
-                const diff = targetY - startY;
-                const start = performance.now();
-                function step(now) {
-                    const t = Math.min(1, (now - start) / duration);
-                    const eased = easeInOutCubic(t);
-                    window.scrollTo(0, Math.round(startY + diff * eased));
-                    // keep TOC aligned while animating
-                    if (typeof updateTOCPosition === 'function') updateTOCPosition();
-                    if (t < 1) {
-                        tocScrollAnim = requestAnimationFrame(step);
-                    } else {
-                        tocScrollAnim = null;
-                        if (typeof callback === 'function') callback();
-                    }
-                }
-                tocScrollAnim = requestAnimationFrame(step);
-            }
-
-            const tocRailEl = document.getElementById('toc-rail');
-            if (tocRailEl) {
-                tocRailEl.addEventListener('click', function (ev) {
-                    const a = ev.target.closest && ev.target.closest('a');
-                    if (!a) return;
-                    const href = a.getAttribute('href');
-                    if (!href || !href.startsWith('#')) return;
-                    ev.preventDefault();
-                    const id = href.slice(1);
-                    const target = document.getElementById(id);
-                    if (!target) return;
-                    // compute target Y so heading appears below the snap top
-                    const rect = target.getBoundingClientRect();
-                    const targetY = window.scrollY + rect.top - TOC_SNAP_TOP - 8;
-                    smoothScrollToY(targetY, 650, function () {
-                        try {
-                            history.replaceState(null, '', '#' + id);
-                        } catch (e) {}
-                        if (typeof updateTOCPosition === 'function') updateTOCPosition();
-                    });
-                });
-            }
-
-            // Make the TOC follow the header divider while visible, then stick near top,
-            // and stop before overlapping the end of the article.
-            function updateTOCPosition() {
-                const toc = document.getElementById('toc-rail');
-                const header = document.querySelector('article header');
-                const article = document.querySelector('article');
-                if (!toc || !header || !article) return;
-                if (window.innerWidth < 1024) {
-                    toc.style.top = '';
-                    return;
-                }
-                const headerRect = header.getBoundingClientRect();
-                const articleRect = article.getBoundingClientRect();
-                const tocHeight = toc.offsetHeight || 0;
-
-                // snapBackTop: the highest position (in px) the TOC should reach
-                const snapBackTop = 80;
-
-                let desiredTop;
-                if (headerRect.bottom > 0) {
-                    // follow the header but don't go above snapBackTop
-                    desiredTop = Math.max(headerRect.bottom + 8, snapBackTop);
-                } else {
-                    desiredTop = snapBackTop;
-                }
-
-                // ensure toc doesn't extend below the article
-                const maxTop = articleRect.bottom - tocHeight - 16;
-                if (desiredTop > maxTop) desiredTop = Math.max(maxTop, 16);
-
-                toc.style.top = desiredTop + 'px';
-            }
-
-            window.addEventListener('scroll', updateTOCPosition, { passive: true });
-            // initial positioning
-            updateTOCPosition();
-        })();
-    </script>
-    {
-        (prevProject || nextProject) && (
-            <div class="my-16 sm:my-24">
-                <hr class="border-t border-gray-300/10 mb-4" />
-                <h2 class="mt-4 mb-8 text-xl font-sans sm:mb-12 sm:text-2xl">View Next</h2>
-                <div class="view-next grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {viewItems.map((p) => (
-                        <ProjectPreview project={p} className="" headingLevel="h3" />
-                    ))}
+        {
+            (prevProject || nextProject) && (
+                <div class="my-16 sm:my-24">
+                    <hr class="border-t border-gray-300/10 mb-4" />
+                    <h2 class="mt-4 mb-8 text-xl font-sans sm:mb-12 sm:text-2xl">View Next</h2>
+                    <div class="view-next grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {viewItems.map((p) => (
+                            <ProjectPreview project={p} className="" headingLevel="h3" />
+                        ))}
+                    </div>
                 </div>
-            </div>
-        )
-    }
+            )
+        }
+    </article>
+    <script>
+        // Simple TOC positioning: align with header bottom, then stick at top
+        function updateTOCPosition() {
+            const toc = document.getElementById('toc-rail');
+            const header = document.querySelector('article header');
+            if (!toc || !header || window.innerWidth < 1024) return;
+
+            const headerRect = header.getBoundingClientRect();
+            const stickyTop = 80; // Distance from top when stuck
+
+            if (headerRect.bottom > stickyTop) {
+                // Header is visible, align TOC with header bottom
+                const absoluteTop = window.scrollY + headerRect.bottom;
+                toc.style.position = 'absolute';
+                toc.style.top = absoluteTop + 8 + 'px';
+            } else {
+                // Header scrolled past, stick TOC at top
+                toc.style.position = 'fixed';
+                toc.style.top = stickyTop + 'px';
+            }
+        }
+
+        // Run on load and scroll
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateTOCPosition);
+        } else {
+            updateTOCPosition();
+        }
+        window.addEventListener('scroll', updateTOCPosition, { passive: true });
+        window.addEventListener('resize', updateTOCPosition);
+    </script>
 </BaseLayout>

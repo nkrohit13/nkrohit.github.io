@@ -152,6 +152,8 @@ html.dark {
             top: 6.5rem;
             max-width: 240px;
             padding-right: 1rem;
+            max-height: calc(100vh - 8rem);
+            overflow-y: auto;
         }
 
         /* push main content to the right slightly so rail doesn't overlap */
@@ -179,3 +181,5 @@ html.dark {
         opacity: 0.85;
     }
 }
+
+

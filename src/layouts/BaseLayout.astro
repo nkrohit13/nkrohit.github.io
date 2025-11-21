@@ -6,9 +6,13 @@ import Header from '../components/Header.astro';
 import Nav from '../components/Nav.astro';
 import '../styles/global.css';
 
-export type Props = HeadProps & { showHeader?: boolean };
+export type Props = HeadProps & {
+    showHeader?: boolean;
+    contactTitle?: string;
+    contactText?: string;
+};
 
-const { showHeader = true, ...head } = Astro.props;
+const { showHeader = true, contactTitle, contactText, ...head } = Astro.props;
 ---
 
 <!doctype html>
@@ -34,7 +38,7 @@ const { showHeader = true, ...head } = Astro.props;
             <main class="grow w-full max-w-3xl mx-auto toc-offset">
                 <slot />
             </main>
-            <Footer />
+            <Footer contactTitle={contactTitle} contactText={contactText} />
         </div>
     </body>
 </html>
